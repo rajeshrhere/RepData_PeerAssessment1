@@ -7,19 +7,54 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
+activities <- read.csv("activity.csv");
+activities[,2] <- as.Date(activities[,2]);
+activities <- cbind(activities, weekday=weekdays(activities[,2]));
+activities <- cbind(activities, weekend=ifelse(activities$weekday=="Saturday" | activities$weekday=="Sunday", "weekend", "weekday"));
 
 ## What is mean total number of steps taken per day?
+totalsteps <- aggregate(activities$steps, by=list(activities$date), FUN=sum, na.rm=TRUE);
+names(totalsteps) <- c("Date", "Total Steps");
+head(totalsteps);
+hist(totalsteps$`Total Steps`, col="Green", xlab="Total steps", ylab=c(0, 30), main="Total number of steps taken each day");
 
-
+mean(totalsteps$`Total Steps`);
+median(totalsteps$`Total Steps`);
 
 ## What is the average daily activity pattern?
+meansteps <- aggregate(activities$steps, by=list(activities$interval), FUN=mean, na.rm=TRUE);
+names(meansteps) <- c("Interval", "Mean Steps");
+head(meansteps);
+meansteps[which(meansteps$`Mean Steps`==max(meansteps$`Mean Steps`)),]$Interval
 
+plot(meansteps$Interval, meansteps$`Mean Steps`, type="l", lwd=1, col="brown", xlab="Interval", ylab="Mean Steps", main="Mean Steps in a day");
 
 
 ## Imputing missing values
+napositions <- which(is.na(activities$steps));
+VectorMean <- rep(mean(activities$steps, na.rm=TRUE), times=length(napositions$steps));
+napos <- which(is.na(activities$steps));
+activities[napos, 1] <- VectorMean;
+rm(VectorMean);
+rm(napos);
+head(activities);
 
+totalsteps_u <- aggregate(activities$steps, by=list(activities$date), FUN=sum, na.rm=TRUE);
+names(totalsteps_u) <- c("Date", "Total Steps");
+head(totalsteps_u);
+hist(totalsteps_u$`Total Steps`, col="Green", xlab="Total steps", ylim=c(0, 40), main="Total number of steps taken each day");
 
+mean(totalsteps_u$`Total Steps`);
+median(totalsteps_u$`Total Steps`);
 
 ## Are there differences in activity patterns between weekdays and weekends?
+weekend_activities <- subset(activities, weekend=='weekend');
+weekend_meansteps <- aggregate(weekend_activities$steps, by=list(weekend_activities$interval), FUN=mean, na.rm=TRUE);
+names(weekend_meansteps) <- c("Interval", "Mean Steps");
+plot(weekend_meansteps$Interval, weekend_meansteps$`Mean Steps`, type="l", lwd=1, col="brown", xlab="Interval", ylab="Mean Steps", main="Mean Steps in a Weekend");
+
+weekday_activities <- subset(activities, weekend=='weekday');
+weekday_meansteps <- aggregate(weekday_activities$steps, by=list(weekday_activities$interval), FUN=mean, na.rm=TRUE);
+names(weekday_meansteps) <- c("Interval", "Mean Steps");
+plot(weekday_meansteps$Interval, weekday_meansteps$`Mean Steps`, type="l", lwd=1, col="brown", xlab="Interval", ylab="Mean Steps", main="Mean Steps in a Weekday");
+
